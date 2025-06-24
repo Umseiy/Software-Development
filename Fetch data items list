@@ -1,0 +1,103 @@
+Step 1: Create a Reusable List Component (UI Only)
+
+// List.js
+import React from 'react';
+
+const List = ({ items, renderItem }) => {
+  return (
+    <ul>
+      {items.map(item => (
+        <li key={item.id}>
+          {renderItem(item)}
+        </li>
+      ))}
+    </ul>
+  );
+};
+
+export default List;
+
+🔍 Notes:
+
+items is the array to display.
+
+renderItem is a function that defines how each item should be rendered.
+
+💡 This makes the List component highly reusable for any type of data.
+
+
+
+---
+
+✅ Step 2: Create a DataFetcher Component (Handles API Logic)
+
+// DataFetcher.js
+import React, { useState, useEffect } from 'react';
+
+const DataFetcher = ({ url, renderSuccess }) => {
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error('Network response was not ok');
+        const result = await response.json();
+        setData(result);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [url]);
+
+  if (loading) return <p>Loading...</p>;
+  if (error) return <p>Error: {error}</p>;
+
+  return renderSuccess(data);
+};
+
+export default DataFetcher;
+
+🔍 Notes:
+
+url is the API endpoint passed as a prop.
+
+renderSuccess is a function prop that defines what to render with the fetched data.
+
+This keeps data fetching logic separate from display logic.
+
+
+
+---
+
+✅ Step 3: Parent Component That Combines Them
+
+// ItemListPage.js
+import React from 'react';
+import DataFetcher from './DataFetcher';
+import List from './List';
+
+const ItemListPage = () => {
+  return (
+    <div>
+      <h1>Reusable Item List</h1>
+      <DataFetcher
+        url="https://jsonplaceholder.typicode.com/posts"
+        renderSuccess={data => (
+          <List
+            items={data.slice(0, 10)} // Optional: limit number of items
+            renderItem={item => <span>{item.title}</span>}
+          />
+        )}
+      />
+    </div>
+  );
+};
+
+export default ItemListPage;
